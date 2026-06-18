@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CHÁY HẾT MÌNH CÙNG WORLD CUP 2026 - Điện lực Vũng Tàu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { inter: ['Inter', 'sans-serif'] },
+                    colors: {
+                        wc: { dark: '#0a0c10', card: 'rgba(255,255,255,0.03)', gold: '#facc15', border: 'rgba(255,255,255,0.08)' }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- ======================================================== -->
+    <!-- MOCK google.script.run cho chạy LOCAL (preview browser)  -->
+    <!-- Khi deploy Apps Script, block này tự vô hiệu hóa        -->
+    <!-- ======================================================== -->
+    <script>
+    (function(){
+        if (typeof google !== 'undefined' && google.script) return; // Apps Script environment - skip mock
+
+        // ===== MOCK DATA =====
+        var MOCK_USERS = [
+            'Nguyễn Ngọc Tuyến', 'Trần Văn Bình', 'Lê Thị Hoa', 'Phạm Minh Đức',
+            'Hoàng Anh Tuấn', 'Ngô Thanh Hải', 'Võ Minh Trí', 'Đặng Thị Mai',
+            'Bùi Văn Khoa', 'Lý Thành Long', 'Trương Quốc Bảo', 'Phan Thị Ngọc'
+        ];
+        var MOCK_MATCHES = [];
+        var teams = [
+            {name:'Mexico',flag:'mx',bang:'A'},{name:'South Africa',flag:'za',bang:'A'},{name:'South Korea',flag:'kr',bang:'A'},{name:'Czechia',flag:'cz',bang:'A'},
+            {name:'Canada',flag:'ca',bang:'B'},{name:'Bosnia & Herzegovina',flag:'ba',bang:'B'},{name:'Qatar',flag:'qa',bang:'B'},{name:'Switzerland',flag:'ch',bang:'B'},
+            {name:'Brazil',flag:'br',bang:'C'},{name:'Morocco',flag:'ma',bang:'C'},{name:'Scotland',flag:'gb-sct',bang:'C'},{name:'Haiti',flag:'ht',bang:'C'},
+            {name:'USA',flag:'us',bang:'D'},{name:'Paraguay',flag:'py',bang:'D'},{name:'Australia',flag:'au',bang:'D'},{name:'Türkiye',flag:'tr',bang:'D'},
+            {name:'Germany',flag:'de',bang:'E'},{name:'Ecuador',flag:'ec',bang:'E'},{name:"Côte d'Ivoire",flag:'ci',bang:'E'},{name:'Curaçao',flag:'cw',bang:'E'},
+            {name:'Netherlands',flag:'nl',bang:'F'},{name:'Japan',flag:'jp',bang:'F'},{name:'Sweden',flag:'se',bang:'F'},{name:'Tunisia',flag:'tn',bang:'F'},
+            {name:'Belgium',flag:'be',bang:'G'},{name:'Iran',flag:'ir',bang:'G'},{name:'Egypt',flag:'eg',bang:'G'},{name:'New Zealand',flag:'nz',bang:'G'},
+            {name:'Spain',flag:'es',bang:'H'},{name:'Uruguay',flag:'uy',bang:'H'},{name:'Saudi Arabia',flag:'sa',bang:'H'},{name:'Cabo Verde',flag:'cv',bang:'H'},
+            {name:'France',flag:'fr',bang:'I'},{name:'Senegal',flag:'sn',bang:'I'},{name:'Norway',flag:'no',bang:'I'},{name:'Iraq',flag:'iq',bang:'I'},
+            {name:'Argentina',flag:'ar',bang:'J'},{name:'Algeria',flag:'dz',bang:'J'},{name:'Austria',flag:'at',bang:'J'},{name:'Jordan',flag:'jo',bang:'J'},
+            {name:'Portugal',flag:'pt',bang:'K'},{name:'DR Congo',flag:'cd',bang:'K'},{name:'Uzbekistan',flag:'uz',bang:'K'},{name:'Colombia',flag:'co',bang:'K'},
+            {name:'England',flag:'gb-eng',bang:'L'},{name:'Croatia',flag:'hr',bang:'L'},{name:'Ghana',flag:'gh',bang:'L'},{name:'Panama',flag:'pa',bang:'L'}
+        ];
+        var pairings = [[0,1],[2,3],[0,2],[1,3],[0,3],[1,2]];
+        var bangList = 'ABCDEFGHIJKL'.split('');
+        var mCode = 1;
+        var baseDate = new Date('2026-06-11T20:00:00Z');
+        var strength = {'Argentina':95,'France':94,'Brazil':93,'England':92,'Spain':91,'Germany':90,'Portugal':89,'Netherlands':88,'Belgium':87,'Croatia':86,'Uruguay':85,'Colombia':84,'USA':83,'Mexico':82,'Japan':81,'Morocco':80,'Switzerland':79,'South Korea':78,'Türkiye':77,'Sweden':76,'Austria':75,'Ecuador':74,'Senegal':73,"Côte d'Ivoire":72,'Norway':71,'Canada':70,'Australia':69,'Iran':68,'Egypt':67,'Algeria':66,'Czechia':65,'Paraguay':64,'Scotland':63,'Qatar':62,'Tunisia':61,'South Africa':60,'Ghana':59,'DR Congo':58,'Saudi Arabia':57,'Panama':56,'Bosnia & Herzegovina':55,'Uzbekistan':54,'Iraq':53,'Jordan':52,'New Zealand':51,'Cabo Verde':50,'Curaçao':49,'Haiti':48};
+
+        for (var b = 0; b < bangList.length; b++) {
+            var bangName = bangList[b];
+            var bt = teams.filter(function(x){return x.bang===bangName;});
+            for (var p = 0; p < pairings.length; p++) {
+                var d1 = bt[pairings[p][0]], d2 = bt[pairings[p][1]];
+                var s1 = strength[d1.name]||60, s2 = strength[d2.name]||60;
+                var diff = Math.abs(s1-s2);
+                var chap=0, doiChap='';
+                if(diff>=20){chap=1.0;}else if(diff>=12){chap=0.75;}else if(diff>=5){chap=0.5;}else if(diff>=2){chap=0.25;}
+                if(chap>0) doiChap = s1<s2?d1.name:d2.name;
+                var matchDate = new Date(baseDate.getTime()+(b*6+p)*8*3600000).toISOString();
+                var ketQua = '';
+                var trangThai = 'Mở cược';
+                // Vài trận đã có KQ cho demo
+                if(mCode<=3) { ketQua=(Math.floor(Math.random()*4))+'-'+(Math.floor(Math.random()*3)); trangThai='Đã kết thúc'; }
+                else if(mCode===4) { trangThai='Đang diễn ra'; }
+                else if(mCode===5) { trangThai='Khóa cược'; }
+                MOCK_MATCHES.push({
+                    maTran:'M'+('00'+mCode).slice(-3), vongDau:'Vòng bảng', bang:bangName,
+                    doi1:d1.name, maQG1:d1.flag, doi2:d2.name, maQG2:d2.flag,
+                    ngayGio:matchDate, tiLeChap:chap, doiDuocChap:doiChap,
+                    ketQua:ketQua, trangThai:trangThai
+                });
+                mCode++;
+            }
+        }
+        // Vòng knockout
+        var koRounds = [
+            {name:'Vòng 32',count:16},{name:'Vòng 16',count:8},{name:'Tứ kết',count:4},{name:'Bán kết',count:2}
+        ];
+        for(var r=0;r<koRounds.length;r++){
+            for(var i=0;i<koRounds[r].count;i++){
+                MOCK_MATCHES.push({
+                    maTran:'M'+('00'+mCode).slice(-3), vongDau:koRounds[r].name, bang:'-',
+                    doi1:'TBD', maQG1:'un', doi2:'TBD', maQG2:'un',
+                    ngayGio:new Date(baseDate.getTime()+(72+mCode-73)*12*3600000).toISOString(),
+                    tiLeChap:0, doiDuocChap:'', ketQua:'', trangThai:'Mở cược'
+                });
+                mCode++;
+            }
+        }
+        MOCK_MATCHES.push({maTran:'M103',vongDau:'Tranh hạng 3',bang:'-',doi1:'TBD',maQG1:'un',doi2:'TBD',maQG2:'un',ngayGio:new Date(baseDate.getTime()+102*12*3600000).toISOString(),tiLeChap:0,doiDuocChap:'',ketQua:'',trangThai:'Mở cược'});
+        MOCK_MATCHES.push({maTran:'M104',vongDau:'Chung kết',bang:'-',doi1:'TBD',maQG1:'un',doi2:'TBD',maQG2:'un',ngayGio:new Date(baseDate.getTime()+103*12*3600000).toISOString(),tiLeChap:0,doiDuocChap:'',ketQua:'',trangThai:'Mở cược'});
+
+        var MOCK_WALLET = {};
+        MOCK_USERS.forEach(function(u){MOCK_WALLET[u]={soDu:100000};});
+        var MOCK_BETS = [];
+        var MOCK_LICHSU = [];
+        var MOCK_NAPTIEN = [];
+        var MOCK_BXH_DATA = MOCK_USERS.map(function(u,i){
+            var w=Math.floor(Math.random()*6), l=Math.floor(Math.random()*4), h=Math.floor(Math.random()*2);
+            return {hoTen:u,phongDoi:['P.KHKT','P.TCKT','P.KDKH','TT.ĐHVH','Đội QLVH'][i%5],tongTran:w+l+h,thang:w,thua:l,hoa:h,tongLoi:(w*20000)-(l*20000),tiLeThang:(w+l+h)>0?Number(((w/(w+l+h))*100).toFixed(1)):0};
+        });
+
+        // ===== MOCK google.script.run (không dùng Proxy) =====
+        function mockDispatch(funcName, args, okCb, failCb) {
+            setTimeout(function(){
+                try {
+                    var result;
+                    switch(funcName) {
+                        case 'layDSHoTen': result = MOCK_USERS; break;
+                        case 'dangNhap':
+                            if(args[1]==='123456'||args[1]==='1') result = {success:true, hoTen:args[0], phongDoi:['P.KHKT','P.TCKT','P.KDKH'][Math.floor(Math.random()*3)], phongDoiVietTat:'PKH', isAdmin:args[0]==='Nguyễn Ngọc Tuyến'};
+                            else result = {success:false, message:'Sai mật khẩu! (Demo: nhập "1" hoặc "123456")'};
+                            break;
+                        case 'layLichThiDau': result = MOCK_MATCHES; break;
+                        case 'layThongTinVi': result = MOCK_WALLET[args[0]] || {soDu:100000}; break;
+                        case 'getThongTinBank': result = {nganHang:'SACOMBANK', soTaiKhoan:'060 282 649 082'}; break;
+                        case 'getCuocCuaToi':
+                            result = MOCK_BETS.filter(function(b){return b.hoTen===args[0];}).map(function(b){
+                                return {dong:0, maTran:b.maTran, chonDoi:b.chonDoi, thoiGian:b.thoiGian, soTien:20000, soLanDoi:b.soLanDoi||0, ketQua:b.ketQua||'Chờ', tienThuongPhat:0, phiDoi:0};
+                            });
+                            break;
+                        case 'datCuoc':
+                            var exist = MOCK_BETS.find(function(b){return b.hoTen===args[0]&&b.maTran===args[1];});
+                            if(exist) { result = {success:false, message:'Bạn đã cược trận này rồi!'}; }
+                            else {
+                                MOCK_BETS.push({hoTen:args[0], maTran:args[1], chonDoi:args[2], thoiGian:new Date().toISOString(), soLanDoi:0, ketQua:'Chờ'});
+                                if(MOCK_WALLET[args[0]]) MOCK_WALLET[args[0]].soDu -= 20000;
+                                result = {success:true, message:'Đặt cược thành công! 🎯'};
+                            }
+                            break;
+                        case 'doiKetQuaCuoc':
+                            var bet2 = MOCK_BETS.find(function(b){return b.hoTen===args[0]&&b.maTran===args[1];});
+                            if(bet2) { bet2.chonDoi=args[2]; bet2.soLanDoi=(bet2.soLanDoi||0)+1; if(MOCK_WALLET[args[0]]) MOCK_WALLET[args[0]].soDu-=5000; result={success:true, message:'Đã đổi sang '+args[2]+'!'}; }
+                            else result = {success:false, message:'Chưa đặt cược trận này!'};
+                            break;
+                        case 'layBangXepHang':
+                            var hay = MOCK_BXH_DATA.slice().sort(function(a,b){return b.thang-a.thang||b.tiLeThang-a.tiLeThang;});
+                            var sai = MOCK_BXH_DATA.slice().sort(function(a,b){return b.thua-a.thua;});
+                            result = {hayNhat:hay, saiNhiuNhat:sai};
+                            break;
+                        case 'napTien':
+                            MOCK_NAPTIEN.push({dong:MOCK_NAPTIEN.length+2, hoTen:args[0], soTien:args[1], thoiGian:new Date().toISOString(), noiDung:args[2], trangThai:'Chờ duyệt'});
+                            result = {success:true, message:'Đã gửi yêu cầu nạp tiền!'};
+                            break;
+                        case 'layDanhSachNapTienChoDuyet': result = MOCK_NAPTIEN.filter(function(n){return n.trangThai==='Chờ duyệt';}); break;
+                        case 'duyetNapTien':
+                            var req2 = MOCK_NAPTIEN.find(function(n){return n.dong===args[0];});
+                            if(req2) { req2.trangThai=args[1]; if(args[1]==='Đã duyệt'&&MOCK_WALLET[req2.hoTen]) MOCK_WALLET[req2.hoTen].soDu+=req2.soTien; }
+                            result = {success:true, message:'Đã '+args[1]+'!'};
+                            break;
+                        case 'doiMatKhau': result = {success:true, message:'Đổi mật khẩu thành công!'}; break;
+                        case 'capNhatKetQua': result = {success:true, message:'Đã cập nhật kết quả!'}; break;
+                        case 'layLichSuGiaoDich': result = MOCK_LICHSU.filter(function(l){return l.hoTen===args[0];})||[]; break;
+                        default: result = {success:true, message:'OK'}; break;
+                    }
+                    if(okCb) okCb(result);
+                } catch(e) {
+                    if(failCb) failCb(e);
+                }
+            }, 300 + Math.random()*300);
+        }
+
+        function makeRunner() {
+            var _ok = null, _fail = null;
+            // Tạo object với tất cả tên hàm backend
+            var funcs = ['layDSHoTen','dangNhap','layLichThiDau','layThongTinVi','getThongTinBank',
+                         'getCuocCuaToi','datCuoc','doiKetQuaCuoc','layBangXepHang','napTien',
+                         'layDanhSachNapTienChoDuyet','duyetNapTien','doiMatKhau','capNhatKetQua','layLichSuGiaoDich'];
+            var runner = {};
+            runner.withSuccessHandler = function(cb) { _ok = cb; return runner; };
+            runner.withFailureHandler = function(cb) { _fail = cb; return runner; };
+            for (var i = 0; i < funcs.length; i++) {
+                (function(fname) {
+                    runner[fname] = function() {
+                        var a = [];
+                        for(var j=0; j<arguments.length; j++) a.push(arguments[j]);
+                        mockDispatch(fname, a, _ok, _fail);
+                    };
+                })(funcs[i]);
+            }
+            return runner;
+        }
+
+        window.google = {
+            script: {
+                run: {
+                    withSuccessHandler: function(cb) { var r = makeRunner(); r.withSuccessHandler(cb); return r; },
+                    withFailureHandler: function(cb) { var r = makeRunner(); r.withFailureHandler(cb); return r; }
+                }
+            }
+        };
+        console.log('%c⚽ MOCK MODE: Đang chạy local preview. MK demo: "1" hoặc "123456"', 'color:#facc15;font-size:14px;font-weight:bold;');
+    })();
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #06080d; color: #e2e8f0; min-height: 100vh; overflow-x: hidden; }
+        [v-cloak] { display: none !important; }
+
+        /* ===== GLASS ===== */
+        .glass { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px); }
+        .glass-strong { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(20px); }
+
+        /* ===== CARDS ===== */
+        .card-match {
+            background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .card-match::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(250,204,21,0.04) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.35s;
+        }
+        .card-match:hover { border-color: rgba(250,204,21,0.25); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+        .card-match:hover::before { opacity: 1; }
+
+        /* ===== BUTTONS ===== */
+        .btn-gold {
+            background: linear-gradient(135deg, #facc15 0%, #f59e0b 100%);
+            color: #000; font-weight: 700; border: none; cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; overflow: hidden;
+        }
+        .btn-gold::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+            opacity: 0; transition: opacity 0.25s;
+        }
+        .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(250,204,21,0.4); }
+        .btn-gold:hover::after { opacity: 1; }
+        .btn-gold:active { transform: translateY(0); }
+        .btn-gold:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+        .btn-outline {
+            background: transparent; border: 1px solid rgba(255,255,255,0.15);
+            color: #e2e8f0; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-outline:hover { border-color: rgba(250,204,21,0.4); color: #facc15; background: rgba(250,204,21,0.05); }
+
+        /* ===== GRADIENT TEXT ===== */
+        .text-gold { color: #facc15; }
+        .text-gold-gradient { background: linear-gradient(135deg, #facc15, #f59e0b, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+        /* ===== HEADER ===== */
+        .app-header { background: rgba(6,8,13,0.9); backdrop-filter: blur(24px); border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+        /* ===== NAV ===== */
+        .nav-scroll { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        .nav-scroll::-webkit-scrollbar { display: none; }
+        .nav-tab {
+            padding: 12px 16px; font-size: 11px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            color: #64748b; cursor: pointer; border-bottom: 2px solid transparent;
+            transition: all 0.2s; white-space: nowrap; border-radius: 8px 8px 0 0;
+        }
+        .nav-tab:hover { color: #94a3b8; background: rgba(255,255,255,0.02); }
+        .nav-tab.active { color: #facc15; border-bottom-color: #facc15; background: rgba(250,204,21,0.03); }
+        .nav-tab.admin-tab { color: #ef4444; }
+        .nav-tab.admin-tab.active { border-bottom-color: #ef4444; background: rgba(239,68,68,0.05); }
+
+        /* ===== FORM ===== */
+        .form-input {
+            width: 100%; background: rgba(255,255,255,0.05) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 10px !important;
+            padding: 12px 16px; color: white !important; font-size: 14px; font-family: 'Inter', sans-serif;
+            outline: none; transition: all 0.2s;
+        }
+        .form-input:focus { border-color: #facc15 !important; box-shadow: 0 0 0 3px rgba(250,204,21,0.1); }
+        .form-input::placeholder { color: #475569; }
+        select.form-input { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 12px center !important; padding-right: 36px; }
+        select.form-input option { background: #0f1219 !important; color: white !important; }
+
+        /* ===== BADGES ===== */
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; }
+        .badge-open { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
+        .badge-locked { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+        .badge-live { background: rgba(251,146,60,0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.2); animation: pulse-badge 2s infinite; }
+        .badge-done { background: rgba(100,116,139,0.15); color: #94a3b8; border: 1px solid rgba(100,116,139,0.2); }
+
+        .handicap-tag { display: inline-block; background: rgba(59,130,246,0.1); color: #60a5fa; padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+
+        /* ===== LOADING ===== */
+        .spinner { border: 3px solid rgba(255,255,255,0.08); border-left-color: #facc15; border-radius: 50%; width: 36px; height: 36px; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse-badge { 0%,100%{opacity:1;}50%{opacity:0.5;} }
+        @keyframes slideDown { from{transform:translateY(-16px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+        @keyframes scaleIn { from{transform:scale(0.92);opacity:0;} to{transform:scale(1);opacity:1;} }
+
+        /* ===== TOAST ===== */
+        .toast-wrap { position:fixed;top:20px;right:20px;z-index:9999;animation:slideDown 0.35s ease; }
+        .toast-msg { padding:14px 20px;border-radius:12px;font-size:13px;font-weight:500;min-width:280px;max-width:400px;backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1); }
+        .toast-ok { background:rgba(34,197,94,0.15);border-left:4px solid #22c55e;color:#a7f3d0; }
+        .toast-err { background:rgba(239,68,68,0.15);border-left:4px solid #ef4444;color:#fecaca; }
+
+        /* ===== MODAL ===== */
+        .modal-bg { position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.2s; }
+        .modal-box { background:#0f1219;border:1px solid rgba(255,255,255,0.1);border-radius:20px;width:100%;max-width:440px;overflow:hidden;animation:scaleIn 0.3s ease; }
+
+        /* ===== TEAM SELECTOR ===== */
+        .team-pick { cursor:pointer;padding:14px 8px;border-radius:12px;border:2px solid transparent;transition:all 0.25s;text-align:center;flex:1; }
+        .team-pick:hover { background:rgba(255,255,255,0.04); }
+        .team-pick.sel-blue { background:rgba(59,130,246,0.12);border-color:#3b82f6;box-shadow:0 0 20px rgba(59,130,246,0.15); }
+        .team-pick.sel-red { background:rgba(239,68,68,0.12);border-color:#ef4444;box-shadow:0 0 20px rgba(239,68,68,0.15); }
+
+        /* ===== LOGIN ===== */
+        .login-bg {
+            background: radial-gradient(ellipse at 50% -20%, rgba(250,204,21,0.1) 0%, transparent 60%),
+                        radial-gradient(ellipse at 20% 100%, rgba(59,130,246,0.06) 0%, transparent 40%),
+                        radial-gradient(ellipse at 80% 80%, rgba(168,85,247,0.04) 0%, transparent 40%),
+                        #06080d;
+            min-height: 100vh;
+        }
+
+        /* ===== TABLE ===== */
+        .rank-table { width:100%;border-collapse:collapse; }
+        .rank-table th { padding:10px 12px;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;text-align:left;background:rgba(0,0,0,0.2);font-weight:600; }
+        .rank-table td { padding:12px;border-bottom:1px solid rgba(255,255,255,0.04); }
+        .rank-table tr:hover td { background:rgba(255,255,255,0.02); }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width:4px;height:4px; }
+        ::-webkit-scrollbar-track { background:transparent; }
+        ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1);border-radius:4px; }
+
+        /* ===== FLAG ===== */
+        .flag-img { width:48px;height:36px;border-radius:4px;object-fit:cover;display:block;margin:0 auto 8px;box-shadow:0 2px 8px rgba(0,0,0,0.3); }
+        .flag-sm { width:40px;height:30px;border-radius:4px;object-fit:cover;display:block;margin:0 auto 8px; }
+
+        /* ===== RESPONSIVE MOBILE ===== */
+        @media (min-width:640px) { .sm-show{display:block!important;} .sm-hide{display:none!important;} }
+        @media (max-width:639px) { .sm-show{display:none!important;} }
+
+        @media (max-width:768px) {
+            body { font-size: 14px; }
+            /* Login */
+            .login-bg { padding: 16px !important; }
+            /* Nav tabs scroll horizontal */
+            .nav-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; gap: 4px !important; flex-wrap: nowrap !important; padding-bottom: 4px; }
+            .nav-tabs > * { white-space: nowrap; min-width: auto; font-size: 11px !important; padding: 8px 12px !important; }
+            /* Match grid -> 1 column */
+            .match-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+            /* Cards smaller */
+            .card-match { padding: 14px !important; border-radius: 14px !important; }
+            .card-match:hover { transform: none; }
+            /* Flag smaller on mobile */
+            .flag-img { width: 40px; height: 30px; }
+            .flag-sm { width: 32px; height: 24px; }
+            /* Font adjustments */
+            .text-gold-gradient { font-size: 24px !important; }
+            /* Form inputs */
+            .form-input { font-size: 14px !important; padding: 12px !important; }
+            /* Wallet grid */
+            .wallet-grid { grid-template-columns: 1fr !important; }
+            /* BXH table scroll */
+            .rank-table th, .rank-table td { padding: 8px 6px; font-size: 11px; }
+            /* Modal wider on mobile */
+            .modal-inner { width: 95vw !important; max-width: none !important; margin: 8px !important; max-height: 92vh !important; }
+            /* Bracket scroll */
+            .bracket-wrap { min-width: 600px !important; }
+            /* Bảng đấu buttons */
+            .bang-btns { gap: 4px !important; }
+            .bang-btns > button { padding: 6px 10px !important; font-size: 11px !important; }
+            /* Header compact */
+            .main-header { padding: 10px 14px !important; }
+            .main-header .header-title { font-size: 12px !important; }
+            /* Team pick in betting modal */
+            .team-pick { padding: 12px 8px !important; }
+            /* Admin panel */
+            .admin-grid { grid-template-columns: 1fr !important; }
+        }
+
+        @media (max-width:380px) {
+            .nav-tabs > * { font-size: 10px !important; padding: 6px 8px !important; }
+            .card-match { padding: 10px !important; }
+            .flag-img { width: 32px; height: 24px; }
+        }
+    </style>
+</head>
+<body id="app" v-cloak>
+
+    <!-- ========== TOAST ========== -->
+    <div v-if="toast.show" class="toast-wrap">
+        <div :class="['toast-msg', toast.type==='success'?'toast-ok':'toast-err']">{{ toast.message }}</div>
+    </div>
+
+    <!-- ========== LOADING ========== -->
+    <div v-if="globalLoading" style="position:fixed;inset:0;z-index:9998;background:rgba(6,8,13,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div class="spinner"></div>
+        <p class="text-gold" style="margin-top:16px;font-size:13px;font-weight:500;animation:pulse-badge 1.5s infinite;">Đang tải dữ liệu...</p>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- ===================== TRANG ĐĂNG NHẬP ========================= -->
+    <!-- ================================================================ -->
+    <div v-if="!user" class="login-bg" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+
+        <div style="max-width:420px;width:100%;text-align:center;">
+            <!-- Logo + particles -->
+            <div style="margin-bottom:36px;position:relative;">
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                    <div style="width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(250,204,21,0.12) 0%,transparent 70%);animation:pulse-badge 3s infinite;"></div>
+                </div>
+                <div style="position:relative;display:inline-block;padding:20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:28px;backdrop-filter:blur(10px);">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/2026_FIFA_World_Cup_logo.svg/512px-2026_FIFA_World_Cup_logo.svg.png"
+                         alt="FIFA World Cup 2026" style="width:100px;height:auto;filter:drop-shadow(0 0 30px rgba(250,204,21,0.3)) saturate(1.2);">
+                </div>
+            </div>
+
+            <h1 style="font-size:22px;font-weight:900;letter-spacing:-0.5px;margin-bottom:6px;line-height:1.3;">
+                CHÁY HẾT MÌNH CÙNG<br>
+                <span class="text-gold-gradient" style="font-size:28px;">WORLD CUP 2026</span>
+            </h1>
+            <p style="font-size:10px;color:#64748b;letter-spacing:4px;text-transform:uppercase;margin-bottom:40px;">Công ty Điện lực Vũng Tàu • Nội bộ</p>
+
+            <!-- Login Form -->
+            <div class="glass-strong" style="border-radius:24px;padding:36px 32px;">
+                <form @submit.prevent="login">
+                    <div style="margin-bottom:20px;text-align:left;">
+                        <label style="display:block;font-size:11px;color:#94a3b8;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Họ và tên</label>
+                        <select v-model="loginForm.hoTen" class="form-input" style="font-size:15px;">
+                            <option value="" disabled>-- Chọn tên của bạn --</option>
+                            <option v-for="name in userList" :key="name" :value="name">{{ name }}</option>
+                        </select>
+                        <p v-if="userList.length===0 && !globalLoading" style="font-size:11px;color:#f87171;margin-top:6px;">❗ Chưa tải được danh sách. Hãy thử tải lại trang.</p>
+                    </div>
+                    <div style="margin-bottom:28px;text-align:left;">
+                        <label style="display:block;font-size:11px;color:#94a3b8;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Mật khẩu</label>
+                        <input type="password" v-model="loginForm.matKhau" class="form-input" style="font-size:15px;" placeholder="Nhập mật khẩu" required>
+                    </div>
+                    <button type="submit" class="btn-gold" :disabled="loading" style="width:100%;padding:15px;border-radius:14px;font-size:14px;letter-spacing:1px;">
+                        <span v-if="loading" style="display:inline-flex;align-items:center;gap:8px;">
+                            <svg style="width:18px;height:18px;animation:spin 0.7s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10" stroke-opacity="0.2"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>
+                            ĐANG XỬ LÝ...
+                        </span>
+                        <span v-else>⚽ VÀO SÂN THÔI</span>
+                    </button>
+                </form>
+                <p style="font-size:10px;color:#475569;margin-top:20px;">
+                    <a href="https://vtvgo.vn/channel/vtv3-1,3.html" target="_blank" style="color:#64748b;text-decoration:none;">📺 Xem trực tiếp trên VTV3</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- ===================== DASHBOARD CHÍNH ========================= -->
+    <!-- ================================================================ -->
+    <div v-else style="min-height:100vh;display:flex;flex-direction:column;">
+
+        <!-- ===== HEADER ===== -->
+        <header class="app-header" style="position:sticky;top:0;z-index:100;">
+            <div style="max-width:1280px;margin:0 auto;padding:0 16px;">
+                <!-- Top bar -->
+                <div style="height:56px;display:flex;align-items:center;justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="background:rgba(255,255,255,0.08);padding:6px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/2026_FIFA_World_Cup_logo.svg/512px-2026_FIFA_World_Cup_logo.svg.png" alt="WC" style="width:22px;height:auto;">
+                        </div>
+                        <div>
+                            <div style="font-size:13px;font-weight:800;letter-spacing:-0.3px;text-transform:uppercase;line-height:1.2;">CHÁY HẾT MÌNH CÙNG WC 2026</div>
+                            <div style="font-size:9px;color:#64748b;letter-spacing:2px;text-transform:uppercase;">Công ty Điện lực Vũng Tàu</div>
+                        </div>
+                    </div>
+
+                    <!-- User area -->
+                    <div style="display:flex;align-items:center;gap:12px;position:relative;">
+                        <div class="sm-show" style="text-align:right;display:none;">
+                            <div style="font-size:12px;font-weight:600;color:#e2e8f0;">{{ user.hoTen }}</div>
+                            <div style="font-size:11px;font-weight:700;color:#facc15;">{{ formatMoney(vi.soDu) }}đ</div>
+                        </div>
+                        <button @click="showUserMenu = !showUserMenu"
+                                style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#334155,#1e293b);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;border:2px solid rgba(255,255,255,0.1);color:#facc15;cursor:pointer;transition:border-color 0.2s;"
+                                onmouseover="this.style.borderColor='#facc15'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                            {{ user.hoTen.charAt(0) }}
+                        </button>
+
+                        <!-- Dropdown menu -->
+                        <div v-if="showUserMenu" class="glass-strong" style="position:absolute;top:50px;right:0;border-radius:16px;width:240px;padding:8px;z-index:200;animation:scaleIn 0.2s ease;">
+                            <div style="padding:12px;border-bottom:1px solid rgba(255,255,255,0.06);">
+                                <div style="font-weight:700;font-size:14px;">{{ user.hoTen }}</div>
+                                <div style="font-size:11px;color:#94a3b8;">{{ user.phongDoi }}</div>
+                                <div style="font-size:14px;font-weight:800;color:#facc15;margin-top:6px;">{{ formatMoney(vi.soDu) }} VNĐ</div>
+                            </div>
+                            <button @click="showDoiMk=true;showUserMenu=false" style="width:100%;text-align:left;padding:10px 12px;font-size:13px;color:#e2e8f0;background:none;border:none;cursor:pointer;border-radius:10px;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">🔑 Đổi mật khẩu</button>
+                            <button @click="logout" style="width:100%;text-align:left;padding:10px 12px;font-size:13px;color:#f87171;background:none;border:none;cursor:pointer;border-radius:10px;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">🚪 Đăng xuất</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nav tabs -->
+                <div class="nav-scroll nav-tabs">
+                    <div v-for="tab in tabs" :key="tab.id" @click="currentTab=tab.id"
+                         :class="['nav-tab', currentTab===tab.id?'active':'']">
+                        {{ tab.icon }} {{ tab.name }}
+                    </div>
+                    <div v-if="user.isAdmin" @click="currentTab='admin'"
+                         :class="['nav-tab admin-tab', currentTab==='admin'?'active':'']">
+                        🛡️ Admin
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main style="flex:1;max-width:1280px;margin:0 auto;width:100%;padding:24px 16px 80px;">
+
+            <!-- ============ TAB: LỊCH THI ĐẤU ============ -->
+            <div v-show="currentTab==='lich'">
+                <!-- Filters -->
+                <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;align-items:center;">
+                    <select v-model="filterVong" class="form-input" style="width:auto;min-width:180px;padding:10px 36px 10px 14px;font-size:13px;">
+                        <option value="All">📋 Tất cả vòng đấu</option>
+                        <option value="Vòng bảng">🏟️ Vòng bảng</option>
+                        <option value="Vòng 32">⚔️ Vòng 32 đội</option>
+                        <option value="Vòng 16">🎯 Vòng 16</option>
+                        <option value="Tứ kết">🔥 Tứ kết</option>
+                        <option value="Bán kết">💎 Bán kết</option>
+                        <option value="Chung kết">🏆 Chung kết & Hạng 3</option>
+                    </select>
+                    <select v-if="filterVong==='Vòng bảng'" v-model="filterBang" class="form-input" style="width:auto;padding:10px 36px 10px 14px;font-size:13px;">
+                        <option value="All">Tất cả bảng</option>
+                        <option v-for="b in 'ABCDEFGHIJKL'.split('')" :key="b" :value="b">Bảng {{ b }}</option>
+                    </select>
+                    <button @click="fetchLichThiDau" class="btn-outline" style="padding:10px 16px;border-radius:10px;font-size:12px;font-weight:600;">
+                        <i data-lucide="refresh-cw" style="width:14px;height:14px;display:inline;vertical-align:middle;"></i> Làm mới
+                    </button>
+                    <div style="margin-left:auto;font-size:12px;color:#64748b;">{{ filteredMatches.length }} trận</div>
+                </div>
+
+                <!-- Match grid -->
+                <div class="match-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;">
+                    <div v-for="t in filteredMatches" :key="t.maTran" class="card-match" style="padding:20px;position:relative;">
+                        <!-- Header -->
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;position:relative;z-index:1;">
+                            <div>
+                                <span style="font-size:10px;color:#475569;font-family:monospace;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;margin-right:6px;">{{ t.maTran }}</span>
+                                <span style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">{{ t.vongDau }} <span v-if="t.bang!=='-'">• {{ t.bang }}</span></span>
+                            </div>
+                            <span :class="['badge', getStatusBadge(t.trangThai)]">{{ t.trangThai }}</span>
+                        </div>
+
+                        <!-- Teams VS -->
+                        <div style="display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;">
+                            <div style="text-align:center;width:36%;">
+                                <img :src="'https://flagcdn.com/48x36/'+t.maQG1+'.png'" class="flag-img" :alt="t.doi1" onerror="this.src='https://flagcdn.com/48x36/un.png'">
+                                <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" :title="t.doi1">{{ t.doi1 }}</div>
+                            </div>
+                            <div style="text-align:center;width:28%;">
+                                <div v-if="t.ketQua" style="font-size:28px;font-weight:900;letter-spacing:6px;" class="text-gold-gradient">{{ t.ketQua }}</div>
+                                <div v-else style="font-size:18px;color:#334155;font-weight:800;">VS</div>
+                                <div style="font-size:10px;color:#64748b;margin-top:8px;">{{ formatDate(t.ngayGio) }}</div>
+                            </div>
+                            <div style="text-align:center;width:36%;">
+                                <img :src="'https://flagcdn.com/48x36/'+t.maQG2+'.png'" class="flag-img" :alt="t.doi2" onerror="this.src='https://flagcdn.com/48x36/un.png'">
+                                <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" :title="t.doi2">{{ t.doi2 }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Countdown + Handicap & Bet button -->
+                        <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;position:relative;z-index:1;">
+                            <!-- Countdown -->
+                            <div v-if="t.trangThai==='Mở cược' && getCountdown(t.ngayGio)" style="margin-bottom:10px;font-size:11px;color:#94a3b8;">
+                                ⏱️ Đặt cược còn: <span style="color:#facc15;font-weight:700;font-family:monospace;">{{ getCountdown(t.ngayGio) }}</span>
+                            </div>
+                            <div style="margin-bottom:12px;">
+                                <span v-if="t.tiLeChap>0" class="handicap-tag">🎲 {{ getDoiChap(t) }} chấp {{ t.tiLeChap }} trái</span>
+                                <span v-else class="handicap-tag" style="background:rgba(100,116,139,0.08);color:#94a3b8;">⚖️ Đồng kèo</span>
+                            </div>
+                            <button v-if="t.trangThai==='Mở cược'" @click="openCuocModal(t)" class="btn-gold" style="width:100%;padding:11px;border-radius:10px;font-size:12px;letter-spacing:0.5px;">
+                                🎯 ĐẶT CƯỢC NGAY
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="filteredMatches.length===0" style="text-align:center;padding:80px 0;color:#475569;">
+                    <div style="font-size:56px;margin-bottom:16px;">⚽</div>
+                    <p style="font-size:15px;">Không có trận đấu phù hợp.</p>
+                </div>
+            </div>
+
+            <!-- ============ TAB: BẢNG ĐẤU & NHÁNH KNOCKOUT ============ -->
+            <div v-show="currentTab==='bang'">
+                <!-- Chọn bảng -->
+                <div class="bang-btns" style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;">
+                    <button v-for="b in 'ABCDEFGHIJKL'.split('')" :key="b" @click="selectedBang=b"
+                            :style="{padding:'8px 16px',borderRadius:'10px',fontSize:'12px',fontWeight:'700',cursor:'pointer',border:'1px solid',transition:'all 0.2s',
+                            background:selectedBang===b?'rgba(250,204,21,0.15)':'rgba(255,255,255,0.03)',
+                            borderColor:selectedBang===b?'#facc15':'rgba(255,255,255,0.08)',
+                            color:selectedBang===b?'#facc15':'#94a3b8'}">
+                        Bảng {{ b }}
+                    </button>
+                </div>
+
+                <!-- Bảng xếp hạng vòng bảng -->
+                <div class="glass-strong" style="border-radius:20px;padding:24px;margin-bottom:32px;">
+                    <h3 style="font-size:16px;font-weight:800;margin-bottom:16px;">🏟️ Bảng {{ selectedBang }}</h3>
+                    <div style="overflow-x:auto;">
+                        <table class="rank-table">
+                            <thead><tr>
+                                <th style="width:40px;text-align:center;">Hạng</th>
+                                <th>Đội</th>
+                                <th style="text-align:center;">Trận</th>
+                                <th style="text-align:center;">Thắng</th>
+                                <th style="text-align:center;">Hòa</th>
+                                <th style="text-align:center;">Thua</th>
+                                <th style="text-align:center;">HS</th>
+                                <th style="text-align:center;color:#facc15;">Điểm</th>
+                            </tr></thead>
+                            <tbody>
+                                <tr v-for="(team,idx) in getGroupStandings(selectedBang)" :key="team.name"
+                                    :style="{background:idx<3?'rgba(250,204,21,0.03)':'transparent'}">
+                                    <td style="text-align:center;font-weight:700;" :style="{color:idx<3?'#4ade80':'#64748b'}">{{ idx+1 }}</td>
+                                    <td style="display:flex;align-items:center;gap:10px;padding:10px 12px;">
+                                        <img :src="'https://flagcdn.com/24x18/'+team.flag+'.png'" style="width:24px;height:18px;border-radius:2px;" onerror="this.src='https://flagcdn.com/24x18/un.png'">
+                                        <span style="font-weight:600;">{{ team.name }}</span>
+                                    </td>
+                                    <td style="text-align:center;">{{ team.played }}</td>
+                                    <td style="text-align:center;color:#4ade80;">{{ team.won }}</td>
+                                    <td style="text-align:center;color:#94a3b8;">{{ team.drawn }}</td>
+                                    <td style="text-align:center;color:#f87171;">{{ team.lost }}</td>
+                                    <td style="text-align:center;font-family:monospace;">{{ team.gd>0?'+':'' }}{{ team.gd }}</td>
+                                    <td style="text-align:center;font-weight:800;color:#facc15;font-size:16px;">{{ team.points }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Nhánh Knockout -->
+                <div class="glass-strong" style="border-radius:20px;padding:24px;">
+                    <h3 style="font-size:16px;font-weight:800;margin-bottom:20px;">🏆 Nhánh đấu Knockout</h3>
+                    <div style="overflow-x:auto;">
+                        <div style="display:flex;gap:32px;align-items:center;min-width:900px;padding:16px 0;">
+                            <!-- Vòng 32 -->
+                            <div style="flex-shrink:0;">
+                                <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;text-align:center;font-weight:600;">Vòng 32</div>
+                                <div style="display:flex;flex-direction:column;gap:4px;">
+                                    <div v-for="t in getKnockoutMatches('Vòng 32')" :key="t.maTran" style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:6px 10px;font-size:10px;min-width:130px;">
+                                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                                            <span :style="{fontWeight:t.ketQua?'700':'400',color:t.ketQua?'#facc15':'#94a3b8'}">{{ t.doi1.substring(0,12) }}</span>
+                                            <span v-if="t.ketQua" style="color:#facc15;font-weight:700;">{{ t.ketQua.split('-')[0] }}</span>
+                                        </div>
+                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">
+                                            <span :style="{fontWeight:t.ketQua?'700':'400',color:t.ketQua?'#facc15':'#94a3b8'}">{{ t.doi2.substring(0,12) }}</span>
+                                            <span v-if="t.ketQua" style="color:#facc15;font-weight:700;">{{ t.ketQua.split('-')[1] }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Vòng 16 -->
+                            <div style="flex-shrink:0;">
+                                <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;text-align:center;font-weight:600;">Vòng 16</div>
+                                <div style="display:flex;flex-direction:column;gap:8px;">
+                                    <div v-for="t in getKnockoutMatches('Vòng 16')" :key="t.maTran" style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:8px 12px;font-size:11px;min-width:140px;">
+                                        <div style="display:flex;justify-content:space-between;"><span>{{ t.doi1.substring(0,14) }}</span><span v-if="t.ketQua" style="color:#facc15;">{{ t.ketQua.split('-')[0] }}</span></div>
+                                        <div style="display:flex;justify-content:space-between;margin-top:3px;"><span>{{ t.doi2.substring(0,14) }}</span><span v-if="t.ketQua" style="color:#facc15;">{{ t.ketQua.split('-')[1] }}</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Tứ kết -->
+                            <div style="flex-shrink:0;">
+                                <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;text-align:center;font-weight:600;">Tứ kết</div>
+                                <div style="display:flex;flex-direction:column;gap:16px;">
+                                    <div v-for="t in getKnockoutMatches('Tứ kết')" :key="t.maTran" style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:10px 14px;font-size:12px;min-width:150px;">
+                                        <div style="display:flex;justify-content:space-between;"><span style="font-weight:600;">{{ t.doi1 }}</span><span v-if="t.ketQua" style="color:#facc15;font-weight:700;">{{ t.ketQua.split('-')[0] }}</span></div>
+                                        <div style="display:flex;justify-content:space-between;margin-top:4px;"><span style="font-weight:600;">{{ t.doi2 }}</span><span v-if="t.ketQua" style="color:#facc15;font-weight:700;">{{ t.ketQua.split('-')[1] }}</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Bán kết -->
+                            <div style="flex-shrink:0;">
+                                <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;text-align:center;font-weight:600;">Bán kết</div>
+                                <div style="display:flex;flex-direction:column;gap:32px;">
+                                    <div v-for="t in getKnockoutMatches('Bán kết')" :key="t.maTran" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:12px;padding:12px 16px;font-size:13px;min-width:160px;">
+                                        <div style="display:flex;justify-content:space-between;"><span style="font-weight:700;">{{ t.doi1 }}</span><span v-if="t.ketQua" style="color:#facc15;font-weight:800;">{{ t.ketQua.split('-')[0] }}</span></div>
+                                        <div style="display:flex;justify-content:space-between;margin-top:4px;"><span style="font-weight:700;">{{ t.doi2 }}</span><span v-if="t.ketQua" style="color:#facc15;font-weight:800;">{{ t.ketQua.split('-')[1] }}</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Chung kết -->
+                            <div style="flex-shrink:0;">
+                                <div style="font-size:10px;color:#facc15;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;text-align:center;font-weight:700;">🏆 Chung kết</div>
+                                <div v-for="t in getKnockoutMatches('Chung kết')" :key="t.maTran" style="background:linear-gradient(135deg,rgba(250,204,21,0.1),rgba(245,158,11,0.05));border:2px solid rgba(250,204,21,0.3);border-radius:14px;padding:16px 20px;font-size:15px;min-width:180px;">
+                                    <div style="display:flex;justify-content:space-between;"><span style="font-weight:800;">{{ t.doi1 }}</span><span v-if="t.ketQua" class="text-gold-gradient" style="font-weight:900;font-size:18px;">{{ t.ketQua.split('-')[0] }}</span></div>
+                                    <div style="display:flex;justify-content:space-between;margin-top:6px;"><span style="font-weight:800;">{{ t.doi2 }}</span><span v-if="t.ketQua" class="text-gold-gradient" style="font-weight:900;font-size:18px;">{{ t.ketQua.split('-')[1] }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ TAB: VÍ TIỀN ============ -->
+            <div v-show="currentTab==='vi'">
+                <div class="wallet-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:24px;">
+                    <!-- Balance card -->
+                    <div class="glass-strong" style="border-radius:24px;padding:36px;position:relative;overflow:hidden;">
+                        <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(250,204,21,0.08),transparent 70%);"></div>
+                        <div style="text-align:center;margin-bottom:32px;position:relative;">
+                            <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:3px;margin-bottom:8px;">Số dư khả dụng</div>
+                            <div class="text-gold-gradient" style="font-size:40px;font-weight:900;line-height:1;">{{ formatMoney(vi.soDu) }}</div>
+                            <div style="font-size:12px;color:#facc15;margin-top:4px;">VNĐ</div>
+                        </div>
+
+                        <div style="background:rgba(0,0,0,0.3);border-radius:16px;padding:20px;border:1px solid rgba(255,255,255,0.04);">
+                            <div style="font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+                                <i data-lucide="landmark" style="width:16px;height:16px;color:#facc15;"></i> Chuyển khoản nạp tiền
+                            </div>
+                            <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Ngân hàng: <span style="color:white;font-weight:600;">{{ bank.nganHang }}</span></div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0;">
+                                <div style="font-size:22px;font-weight:900;color:#facc15;letter-spacing:2px;font-family:monospace;">{{ bank.soTaiKhoan }}</div>
+                                <button @click="copy(bank.soTaiKhoan)" class="btn-outline" style="padding:6px 14px;border-radius:8px;font-size:11px;font-weight:600;">📋 Copy</button>
+                            </div>
+                            <div style="font-size:11px;color:#fb923c;border-left:3px solid #fb923c;padding:8px 12px;background:rgba(251,146,60,0.05);border-radius:0 8px 8px 0;">
+                                Nội dung CK: <strong style="color:white;text-transform:uppercase;">NAPTIEN {{ removeAccents(user.hoTen) }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Deposit form -->
+                    <div class="glass-strong" style="border-radius:24px;padding:36px;">
+                        <h2 style="font-size:18px;font-weight:800;margin-bottom:24px;display:flex;align-items:center;gap:8px;">
+                            <i data-lucide="plus-circle" style="width:20px;height:20px;color:#facc15;"></i> Gửi biên lai nạp tiền
+                        </h2>
+                        <form @submit.prevent="submitNapTien">
+                            <div style="margin-bottom:18px;">
+                                <label style="display:block;font-size:11px;color:#94a3b8;font-weight:600;margin-bottom:6px;">Số tiền đã chuyển (VNĐ)</label>
+                                <input type="number" v-model.number="napTienForm.soTien" class="form-input" style="font-size:20px;font-weight:800;color:#facc15 !important;" required min="10000" step="10000">
+                            </div>
+                            <div style="margin-bottom:24px;">
+                                <label style="display:block;font-size:11px;color:#94a3b8;font-weight:600;margin-bottom:6px;">Nội dung đã ghi khi chuyển</label>
+                                <input type="text" v-model="napTienForm.noiDung" class="form-input" placeholder="VD: NAPTIEN NGUYEN VAN A" required>
+                            </div>
+                            <button type="submit" class="btn-gold" style="width:100%;padding:14px;border-radius:14px;font-size:13px;">✅ XÁC NHẬN ĐÃ CHUYỂN KHOẢN</button>
+                            <p style="font-size:10px;color:#475569;text-align:center;margin-top:14px;">Admin sẽ duyệt trong vòng 5-10 phút</p>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Transaction history -->
+                <div class="glass" style="border-radius:16px;padding:24px;margin-top:24px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h3 style="font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;"><i data-lucide="scroll-text" style="width:16px;height:16px;color:#facc15;"></i> Lịch sử giao dịch</h3>
+                        <button @click="fetchLichSu" class="btn-outline" style="padding:6px 12px;border-radius:8px;font-size:11px;">🔄 Tải lại</button>
+                    </div>
+                    <div v-if="lichSu.length===0" style="text-align:center;padding:24px;color:#475569;font-size:13px;">Chưa có giao dịch nào</div>
+                    <div v-else style="max-height:320px;overflow-y:auto;">
+                        <div v-for="(ls,idx) in lichSu" :key="idx" style="display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:13px;">
+                            <div>
+                                <div style="font-weight:600;">{{ ls.loai }}</div>
+                                <div style="font-size:10px;color:#64748b;">{{ ls.ghiChu }}</div>
+                            </div>
+                            <div :style="{color:ls.soTien>=0?'#4ade80':'#f87171',fontWeight:'700',fontFamily:'monospace'}">
+                                {{ ls.soTien>=0?'+':'' }}{{ formatMoney(ls.soTien) }}đ
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ TAB: CƯỢC CỦA TÔI ============ -->
+            <div v-show="currentTab==='cuoc'">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+                    <h2 style="font-size:20px;font-weight:800;display:flex;align-items:center;gap:8px;">
+                        <i data-lucide="target" style="width:22px;height:22px;color:#facc15;"></i> Cược của tôi
+                    </h2>
+                    <button @click="fetchCuocCuaToi" class="btn-outline" style="padding:8px 14px;border-radius:10px;font-size:11px;font-weight:600;">🔄 Tải lại</button>
+                </div>
+
+                <div v-if="myBets.length===0" style="text-align:center;padding:80px 0;color:#475569;">
+                    <div style="font-size:56px;margin-bottom:16px;">🏟️</div>
+                    <p style="font-size:15px;">Chưa đặt cược trận nào.</p>
+                    <button @click="currentTab='lich'" class="btn-gold" style="margin-top:16px;padding:10px 24px;border-radius:10px;font-size:12px;">📅 Xem lịch thi đấu</button>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px;">
+                    <div v-for="b in myBets" :key="b.maTran" class="glass" style="border-radius:16px;padding:20px;border-left:4px solid;"
+                         :style="{borderLeftColor:b.ketQua==='Thắng'?'#22c55e':b.ketQua==='Thua'?'#ef4444':'#3b82f6'}">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                            <span style="font-size:11px;color:#475569;font-family:monospace;background:rgba(0,0,0,0.3);padding:3px 8px;border-radius:6px;">{{ b.maTran }}</span>
+                            <span :class="['badge', b.ketQua==='Thắng'?'badge-open':b.ketQua==='Thua'?'badge-locked':'badge-live']" style="animation:none;">{{ b.ketQua }}</span>
+                        </div>
+
+                        <div style="background:rgba(0,0,0,0.2);border-radius:12px;padding:16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+                            <div>
+                                <div style="font-size:10px;color:#64748b;margin-bottom:2px;">Đội bạn chọn</div>
+                                <div style="font-size:18px;font-weight:800;color:#facc15;">{{ b.chonDoi }}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size:10px;color:#64748b;margin-bottom:2px;">Tiền cược</div>
+                                <div style="font-family:monospace;font-weight:700;font-size:15px;">{{ formatMoney(b.soTien) }}đ</div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <div style="font-size:12px;">
+                                <span v-if="b.ketQua==='Chờ'" style="color:#94a3b8;">Đã đổi: {{ b.soLanDoi }}/2 lần</span>
+                                <span v-else :style="{color:b.tienThuongPhat>0?'#4ade80':'#f87171',fontWeight:'700',fontFamily:'monospace'}">
+                                    {{ b.tienThuongPhat>0?'+':'' }}{{ formatMoney(b.tienThuongPhat) }}đ
+                                </span>
+                            </div>
+                            <button v-if="b.ketQua==='Chờ' && b.soLanDoi<2 && canChangeBet(b.maTran)" @click="openChangeModal(b)"
+                                    style="background:rgba(251,146,60,0.12);color:#fb923c;border:1px solid rgba(251,146,60,0.25);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:600;transition:all 0.2s;"
+                                    onmouseover="this.style.background='rgba(251,146,60,0.25)'" onmouseout="this.style.background='rgba(251,146,60,0.12)'">
+                                🔄 Đổi lựa chọn (-5k)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ TAB: BẢNG XẾP HẠNG ============ -->
+            <div v-show="currentTab==='bxh'">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                    <h2 style="font-size:20px;font-weight:800;">🏆 Bảng xếp hạng</h2>
+                    <button @click="fetchBXH" class="btn-outline" style="padding:8px 14px;border-radius:10px;font-size:11px;font-weight:600;">🔄 Cập nhật</button>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:24px;">
+                    <!-- TOP WINNERS -->
+                    <div class="glass-strong" style="border-radius:20px;padding:28px;border-top:3px solid #22c55e;">
+                        <h3 style="font-size:17px;font-weight:800;margin-bottom:20px;">🏅 BÀN TAY VÀNG (Top Thắng)</h3>
+                        <div style="overflow-x:auto;">
+                            <table class="rank-table">
+                                <thead><tr><th style="text-align:center;width:50px;">Hạng</th><th>Cao thủ</th><th style="text-align:center;">Tỉ lệ</th><th style="text-align:right;">Lãi</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="(u,idx) in bxh.hayNhat.slice(0,10)" :key="u.hoTen"
+                                        :style="{background:u.hoTen===user.hoTen?'rgba(250,204,21,0.06)':'transparent'}">
+                                        <td style="text-align:center;font-size:20px;">
+                                            <span v-if="idx===0">🥇</span><span v-else-if="idx===1">🥈</span><span v-else-if="idx===2">🥉</span><span v-else style="color:#64748b;font-size:14px;">{{idx+1}}</span>
+                                        </td>
+                                        <td>
+                                            <div :style="{fontWeight:'700',color:idx<3?'#facc15':'#e2e8f0'}">{{ u.hoTen }}</div>
+                                            <div style="font-size:10px;color:#64748b;">{{ u.phongDoi }} • {{u.thang}}W {{u.thua}}L / {{u.tongTran}} trận</div>
+                                        </td>
+                                        <td style="text-align:center;color:#4ade80;font-family:monospace;font-weight:700;">{{ u.tiLeThang }}%</td>
+                                        <td style="text-align:right;font-family:monospace;font-weight:700;" :style="{color:u.tongLoi>=0?'#facc15':'#f87171'}">{{ u.tongLoi>=0?'+':'' }}{{ formatMoney(u.tongLoi) }}đ</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- TOP LOSERS -->
+                    <div class="glass-strong" style="border-radius:20px;padding:28px;border-top:3px solid #ef4444;">
+                        <h3 style="font-size:17px;font-weight:800;margin-bottom:20px;">💸 ĐẠI GIA BƠM MÁU (Top Thua)</h3>
+                        <div style="overflow-x:auto;">
+                            <table class="rank-table">
+                                <thead><tr><th style="text-align:center;width:50px;">Hạng</th><th>Người chơi</th><th style="text-align:center;">Thua</th><th style="text-align:right;">Lỗ</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="(u,idx) in bxh.saiNhiuNhat.slice(0,10)" :key="u.hoTen"
+                                        :style="{background:u.hoTen===user.hoTen?'rgba(239,68,68,0.06)':'transparent'}">
+                                        <td style="text-align:center;font-size:20px;">
+                                            <span v-if="idx===0">🤡</span><span v-else-if="idx===1">😭</span><span v-else-if="idx===2">💀</span><span v-else style="color:#64748b;font-size:14px;">{{idx+1}}</span>
+                                        </td>
+                                        <td>
+                                            <div style="font-weight:700;">{{ u.hoTen }}</div>
+                                            <div style="font-size:10px;color:#64748b;">{{ u.phongDoi }}</div>
+                                        </td>
+                                        <td style="text-align:center;color:#f87171;font-weight:700;">{{ u.thua }} trận</td>
+                                        <td style="text-align:right;color:#f87171;font-family:monospace;font-weight:700;">{{ formatMoney(u.tongLoi) }}đ</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ TAB: ADMIN ============ -->
+            <div v-show="currentTab==='admin' && user && user.isAdmin">
+                <div class="glass-strong" style="border-radius:20px;padding:32px;border:1px solid rgba(239,68,68,0.15);">
+                    <h2 style="font-size:22px;font-weight:900;color:#ef4444;margin-bottom:28px;display:flex;align-items:center;gap:10px;">
+                        <i data-lucide="shield-check" style="width:24px;height:24px;"></i> QUẢN TRỊ VIÊN
+                    </h2>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:32px;">
+                        <!-- Update results -->
+                        <div>
+                            <h3 style="font-weight:700;margin-bottom:16px;color:#facc15;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:8px;">
+                                <i data-lucide="clipboard-check" style="width:16px;height:16px;"></i> Nhập kết quả trận đấu
+                            </h3>
+                            <select v-model="adminForm.maTran" class="form-input" style="margin-bottom:12px;font-size:13px;">
+                                <option value="" disabled>Chọn trận đấu...</option>
+                                <option v-for="t in matches" :key="t.maTran" :value="t.maTran">{{ t.maTran }} — {{ t.doi1 }} vs {{ t.doi2 }} ({{ t.trangThai }})</option>
+                            </select>
+                            <input type="text" v-model="adminForm.ketQua" placeholder="Nhập tỉ số: 2-1" class="form-input" style="margin-bottom:14px;text-align:center;font-size:24px;font-weight:900;letter-spacing:8px;color:#facc15 !important;">
+                            <button @click="submitKetQua" style="width:100%;padding:13px;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-size:13px;transition:all 0.2s;"
+                                    onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 16px rgba(239,68,68,0.4)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+                                🔥 CẬP NHẬT KẾT QUẢ & TÍNH TIỀN
+                            </button>
+                        </div>
+
+                        <!-- Approve deposits -->
+                        <div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06);">
+                                <h3 style="font-weight:700;color:#facc15;display:flex;align-items:center;gap:8px;">
+                                    <i data-lucide="wallet" style="width:16px;height:16px;"></i> Duyệt nạp tiền
+                                </h3>
+                                <button @click="fetchAdminNapTien" class="btn-outline" style="padding:6px 12px;border-radius:8px;font-size:11px;">Tải danh sách</button>
+                            </div>
+                            <div v-if="adminNapTienList.length===0" style="text-align:center;padding:24px;color:#475569;font-size:13px;">Không có yêu cầu chờ duyệt ✓</div>
+                            <div v-else style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;">
+                                <div v-for="req in adminNapTienList" :key="req.dong" style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px;">
+                                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                        <strong style="color:#60a5fa;font-size:14px;">{{ req.hoTen }}</strong>
+                                        <span style="color:#facc15;font-family:monospace;font-weight:800;font-size:15px;">{{ formatMoney(req.soTien) }}đ</span>
+                                    </div>
+                                    <div style="font-size:11px;color:#64748b;margin-bottom:12px;">ND: {{ req.noiDung }} • {{ formatDate(req.thoiGian) }}</div>
+                                    <div style="display:flex;gap:8px;">
+                                        <button @click="duyetTien(req.dong,'Đã duyệt')" style="flex:1;padding:9px;background:rgba(34,197,94,0.12);color:#4ade80;border:1px solid rgba(34,197,94,0.25);border-radius:10px;cursor:pointer;font-weight:600;font-size:12px;transition:all 0.2s;"
+                                                onmouseover="this.style.background='rgba(34,197,94,0.25)'" onmouseout="this.style.background='rgba(34,197,94,0.12)'">✅ Phê duyệt</button>
+                                        <button @click="duyetTien(req.dong,'Từ chối')" style="flex:1;padding:9px;background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.25);border-radius:10px;cursor:pointer;font-weight:600;font-size:12px;transition:all 0.2s;"
+                                                onmouseover="this.style.background='rgba(239,68,68,0.25)'" onmouseout="this.style.background='rgba(239,68,68,0.12)'">❌ Từ chối</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer style="border-top:1px solid rgba(255,255,255,0.04);padding:20px;text-align:center;">
+            <p style="font-size:10px;color:#334155;letter-spacing:1px;">© 2026 Công ty Điện lực Vũng Tàu • Chương trình cá cược vui vẻ nội bộ</p>
+        </footer>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- ===================== MODAL ĐỔI MẬT KHẨU ===================== -->
+    <!-- ================================================================ -->
+    <div v-if="showDoiMk" class="modal-bg" @click.self="showDoiMk=false">
+        <div class="modal-box" style="padding:32px;">
+            <h3 style="font-size:18px;font-weight:800;color:#facc15;margin-bottom:24px;">🔑 Đổi mật khẩu</h3>
+            <form @submit.prevent="submitDoiMk">
+                <input type="password" v-model="passForm.old" placeholder="Mật khẩu hiện tại" class="form-input" style="margin-bottom:14px;" required>
+                <input type="password" v-model="passForm.new1" placeholder="Mật khẩu mới (≥6 ký tự)" class="form-input" style="margin-bottom:14px;" required minlength="6">
+                <input type="password" v-model="passForm.new2" placeholder="Xác nhận mật khẩu mới" class="form-input" style="margin-bottom:24px;" required>
+                <div style="display:flex;gap:10px;">
+                    <button type="button" @click="showDoiMk=false" class="btn-outline" style="flex:1;padding:12px;border-radius:12px;font-weight:600;font-size:13px;">HỦY</button>
+                    <button type="submit" class="btn-gold" style="flex:1;padding:12px;border-radius:12px;font-size:13px;">LƯU LẠI</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- ===================== MODAL ĐẶT CƯỢC ========================= -->
+    <!-- ================================================================ -->
+    <div v-if="cuocModal.show" class="modal-bg" @click.self="cuocModal.show=false">
+        <div class="modal-box">
+            <!-- Header -->
+            <div style="background:linear-gradient(135deg,rgba(250,204,21,0.08),transparent);padding:24px;text-align:center;position:relative;">
+                <button @click="cuocModal.show=false" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#64748b;cursor:pointer;font-size:22px;transition:color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#64748b'">✕</button>
+                <div style="font-size:10px;color:#facc15;text-transform:uppercase;letter-spacing:2px;font-weight:800;">
+                    {{ cuocModal.tran.maTran }} — {{ cuocModal.isChange ? 'ĐỔI LỰA CHỌN' : 'PHIẾU ĐẶT CƯỢC' }}
+                </div>
+            </div>
+
+            <div style="padding:24px;">
+                <!-- Team selection -->
+                <div style="display:flex;gap:12px;background:rgba(0,0,0,0.3);border-radius:16px;padding:16px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.04);">
+                    <div @click="cuocModal.chon=cuocModal.tran.doi1"
+                         :class="['team-pick', cuocModal.chon===cuocModal.tran.doi1?'sel-blue':'']">
+                        <img :src="'https://flagcdn.com/48x36/'+cuocModal.tran.maQG1+'.png'" class="flag-sm" onerror="this.src='https://flagcdn.com/48x36/un.png'">
+                        <div style="font-size:13px;font-weight:700;">{{ cuocModal.tran.doi1 }}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:center;padding:0 4px;">
+                        <div style="font-size:10px;color:#475569;font-weight:700;text-align:center;line-height:1.4;">CHỌN<br>ĐỘI</div>
+                    </div>
+                    <div @click="cuocModal.chon=cuocModal.tran.doi2"
+                         :class="['team-pick', cuocModal.chon===cuocModal.tran.doi2?'sel-red':'']">
+                        <img :src="'https://flagcdn.com/48x36/'+cuocModal.tran.maQG2+'.png'" class="flag-sm" onerror="this.src='https://flagcdn.com/48x36/un.png'">
+                        <div style="font-size:13px;font-weight:700;">{{ cuocModal.tran.doi2 }}</div>
+                    </div>
+                </div>
+
+                <!-- Handicap -->
+                <div style="text-align:center;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.12);border-radius:12px;padding:12px;margin-bottom:20px;font-size:12px;color:#93c5fd;">
+                    ℹ️ <span v-if="cuocModal.tran.tiLeChap>0"><b>{{ getDoiChap(cuocModal.tran) }}</b> chấp <b>{{ cuocModal.tran.tiLeChap }}</b> trái</span>
+                    <span v-else>Đồng kèo (Không chấp)</span>
+                </div>
+
+                <!-- Cost -->
+                <div style="font-size:13px;margin-bottom:24px;">
+                    <div style="display:flex;justify-content:space-between;padding:6px 0;color:#94a3b8;">
+                        <span>Phí:</span>
+                        <span style="color:#f87171;font-weight:700;font-family:monospace;">-{{ cuocModal.isChange?'5.000':'20.000' }}đ</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:6px 0;color:#94a3b8;">
+                        <span>Số dư hiện tại:</span>
+                        <span style="font-family:monospace;">{{ formatMoney(vi.soDu) }}đ</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;">
+                        <span style="color:#94a3b8;">Sau khi cược:</span>
+                        <span :style="{color:(vi.soDu-(cuocModal.isChange?5000:20000))>=0?'#facc15':'#ef4444',fontWeight:'800',fontFamily:'monospace'}">
+                            {{ formatMoney(vi.soDu-(cuocModal.isChange?5000:20000)) }}đ
+                        </span>
+                    </div>
+                </div>
+
+                <button @click="submitCuoc" :disabled="!cuocModal.chon" class="btn-gold" style="width:100%;padding:15px;border-radius:14px;font-size:14px;">
+                    {{ cuocModal.isChange ? '🔄 XÁC NHẬN ĐỔI' : '🎯 XÁC NHẬN ĐẶT CƯỢC' }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- ===================== VUE APPLICATION ========================= -->
+    <!-- ================================================================ -->
+    <script>
+        Vue.createApp({
+            data: function() {
+                return {
+                    user: null, userList: [],
+                    loginForm: { hoTen: '', matKhau: '' },
+                    loading: false, globalLoading: false,
+                    currentTab: 'lich',
+                    tabs: [
+                        { id:'lich', name:'Lịch thi đấu', icon:'📅' },
+                        { id:'bang', name:'Bảng đấu', icon:'🏟️' },
+                        { id:'vi', name:'Ví tiền', icon:'💰' },
+                        { id:'cuoc', name:'Cược của tôi', icon:'🎯' },
+                        { id:'bxh', name:'Bảng xếp hạng', icon:'🏆' }
+                    ],
+                    showUserMenu: false, showDoiMk: false,
+                    passForm: { old:'', new1:'', new2:'' },
+                    toast: { show:false, message:'', type:'success' },
+                    vi: { soDu:0 },
+                    bank: { nganHang:'SACOMBANK', soTaiKhoan:'060 282 649 082' },
+                    napTienForm: { soTien:50000, noiDung:'' },
+                    lichSu: [],
+                    matches: [], filterVong:'All', filterBang:'All',
+                    selectedBang: 'A',
+                    nowTime: Date.now(),
+                    myBets: [],
+                    bxh: { hayNhat:[], saiNhiuNhat:[] },
+                    cuocModal: { show:false, isChange:false, tran:{}, chon:'' },
+                    adminForm: { maTran:'', ketQua:'' },
+                    adminNapTienList: []
+                };
+            },
+            computed: {
+                filteredMatches: function() {
+                    var self = this, list = this.matches;
+                    if (this.filterVong !== 'All') {
+                        if (this.filterVong === 'Chung kết') list = list.filter(function(m){return m.vongDau==='Chung kết'||m.vongDau==='Tranh hạng 3';});
+                        else list = list.filter(function(m){return m.vongDau===self.filterVong;});
+                    }
+                    if (this.filterVong==='Vòng bảng' && this.filterBang!=='All') list = list.filter(function(m){return m.bang===self.filterBang;});
+                    return list;
+                }
+            },
+            methods: {
+                showToast: function(msg,type){var s=this;this.toast={show:true,message:msg,type:type||'success'};setTimeout(function(){s.toast.show=false;},3500);},
+                formatMoney: function(n){if(n===null||n===undefined)return'0';return Number(n).toLocaleString('vi-VN');},
+                formatDate: function(iso){if(!iso)return'';try{var d=new Date(iso);if(isNaN(d.getTime()))return String(iso);return d.toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Ho_Chi_Minh'});}catch(e){return String(iso);}},
+                removeAccents: function(s){if(!s)return'';return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toUpperCase();},
+                copy: function(t){try{navigator.clipboard.writeText(t.replace(/\s/g,''));this.showToast('Đã copy!');}catch(e){prompt('Copy:',t);}},
+                getStatusBadge: function(s){if(s==='Mở cược')return'badge-open';if(s==='Đã kết thúc')return'badge-done';if(s==='Đang diễn ra')return'badge-live';return'badge-locked';},
+                getDoiChap: function(t){if(!t||t.tiLeChap<=0)return'';return t.doi1===t.doiDuocChap?t.doi2:t.doi1;},
+                canChangeBet: function(id){var t=this.matches.find(function(x){return x.maTran===id;});return t?new Date().getTime()<new Date(t.ngayGio).getTime():false;},
+                getCountdown: function(ngayGio){
+                    if(!ngayGio)return'';
+                    var deadline=new Date(ngayGio).getTime()-3*3600000;
+                    var diff=deadline-this.nowTime;
+                    if(diff<=0)return'';
+                    var d=Math.floor(diff/86400000);
+                    var h=Math.floor((diff%86400000)/3600000);
+                    var m=Math.floor((diff%3600000)/60000);
+                    var s=Math.floor((diff%60000)/1000);
+                    if(d>0)return d+'d '+h+'h '+m+'m';
+                    return h+'h '+m+'m '+s+'s';
+                },
+                getGroupStandings: function(bang){
+                    var groupMatches=this.matches.filter(function(m){return m.vongDau==='Vòng bảng'&&m.bang===bang;});
+                    var teams={};
+                    groupMatches.forEach(function(m){
+                        if(!teams[m.doi1])teams[m.doi1]={name:m.doi1,flag:m.maQG1,played:0,won:0,drawn:0,lost:0,gf:0,ga:0,gd:0,points:0};
+                        if(!teams[m.doi2])teams[m.doi2]={name:m.doi2,flag:m.maQG2,played:0,won:0,drawn:0,lost:0,gf:0,ga:0,gd:0,points:0};
+                        if(m.ketQua&&m.ketQua.indexOf('-')>-1){
+                            var parts=m.ketQua.split('-');
+                            var g1=parseInt(parts[0])||0, g2=parseInt(parts[1])||0;
+                            teams[m.doi1].played++;teams[m.doi2].played++;
+                            teams[m.doi1].gf+=g1;teams[m.doi1].ga+=g2;
+                            teams[m.doi2].gf+=g2;teams[m.doi2].ga+=g1;
+                            if(g1>g2){teams[m.doi1].won++;teams[m.doi1].points+=3;teams[m.doi2].lost++;}
+                            else if(g1<g2){teams[m.doi2].won++;teams[m.doi2].points+=3;teams[m.doi1].lost++;}
+                            else{teams[m.doi1].drawn++;teams[m.doi1].points+=1;teams[m.doi2].drawn++;teams[m.doi2].points+=1;}
+                        }
+                    });
+                    var arr=Object.values(teams);
+                    arr.forEach(function(t){t.gd=t.gf-t.ga;});
+                    arr.sort(function(a,b){return b.points-a.points||b.gd-a.gd||b.gf-a.gf;});
+                    return arr;
+                },
+                getKnockoutMatches: function(round){
+                    return this.matches.filter(function(m){return m.vongDau===round;});
+                },
+                callServer: function(method,args){
+                    var self=this; args=args||[];
+                    self.globalLoading=true;
+                    // Nếu chạy trên Apps Script → dùng google.script.run
+                    if(typeof google!=='undefined'&&google.script&&google.script.run&&!window.__VERCEL_MODE){
+                        return new Promise(function(resolve,reject){
+                            var r=google.script.run
+                                .withSuccessHandler(function(res){self.globalLoading=false;resolve(res);})
+                                .withFailureHandler(function(err){self.globalLoading=false;reject(err);});
+                            switch(args.length){
+                                case 0:r[method]();break;case 1:r[method](args[0]);break;
+                                case 2:r[method](args[0],args[1]);break;case 3:r[method](args[0],args[1],args[2]);break;
+                                default:r[method](args[0],args[1],args[2],args[3]);break;
+                            }
+                        });
+                    }
+                    // Nếu chạy trên Vercel → fetch API
+                    var API_URL='https://script.google.com/macros/s/AKfycbxeGk1hsXKuyBC_ypgfKnDHMU-hbTyEJMCQKYoRbzuPnW4gxz3mkndNO_WqRUrOYVb0/exec';
+                    return fetch(API_URL,{
+                        method:'POST',redirect:'follow',
+                        headers:{'Content-Type':'text/plain;charset=utf-8'},
+                        body:JSON.stringify({action:method,args:args})
+                    }).then(function(r){return r.json();})
+                    .then(function(data){self.globalLoading=false;return data;})
+                    .catch(function(err){self.globalLoading=false;throw err;});
+                },
+                initLoad: function(){
+                    var self=this;
+                    var saved=null;try{var s=sessionStorage.getItem('wc_user');if(s)saved=JSON.parse(s);}catch(e){}
+                    if(saved){this.user=saved;this.loadDash();}
+                    else{
+                        this.globalLoading=true;
+                        google.script.run.withSuccessHandler(function(r){self.globalLoading=false;self.userList=r||[];}).withFailureHandler(function(e){self.globalLoading=false;self.showToast('Lỗi: '+e.message,'error');}).layDSHoTen();
+                    }
+                },
+                login: function(){
+                    var self=this;
+                    if(!this.loginForm.hoTen){this.showToast('Chọn Họ và tên','error');return;}
+                    if(!this.loginForm.matKhau){this.showToast('Nhập mật khẩu','error');return;}
+                    this.loading=true; this.globalLoading=true;
+                    google.script.run
+                        .withSuccessHandler(function(res){
+                            self.loading=false;self.globalLoading=false;
+                            if(res&&res.success){try{sessionStorage.setItem('wc_user',JSON.stringify(res));}catch(e){}self.user=res;self.showToast('Chào mừng '+res.hoTen+'! ⚽');self.loadDash();}
+                            else{self.showToast(res?res.message:'Đăng nhập thất bại!','error');}
+                        })
+                        .withFailureHandler(function(e){self.loading=false;self.globalLoading=false;self.showToast('Lỗi server!','error');})
+                        .dangNhap(self.loginForm.hoTen,self.loginForm.matKhau);
+                },
+                logout: function(){try{sessionStorage.removeItem('wc_user');}catch(e){}this.user=null;this.showUserMenu=false;this.currentTab='lich';this.initLoad();},
+                loadDash: function(){this.fetchVi();this.fetchLichThiDau();this.fetchBank();},
+                fetchVi: function(){var s=this;this.callServer('layThongTinVi',[this.user.hoTen]).then(function(r){if(r)s.vi=r;}).catch(function(){});},
+                fetchLichThiDau: function(){var s=this;this.callServer('layLichThiDau').then(function(r){if(r)s.matches=r;}).catch(function(){});},
+                fetchBank: function(){var s=this;this.callServer('getThongTinBank').then(function(r){if(r)s.bank=r;}).catch(function(){});},
+                fetchLichSu: function(){var s=this;this.callServer('layLichSuGiaoDich',[this.user.hoTen]).then(function(r){if(r)s.lichSu=r;}).catch(function(){});},
+                fetchCuocCuaToi: function(){var s=this;this.callServer('getCuocCuaToi',[this.user.hoTen]).then(function(r){if(r){r.reverse();s.myBets=r;}}).catch(function(){});},
+                fetchBXH: function(){var s=this;this.callServer('layBangXepHang').then(function(r){if(r)s.bxh=r;}).catch(function(){});},
+                submitDoiMk: function(){var s=this;if(this.passForm.new1!==this.passForm.new2){this.showToast('MK xác nhận không khớp!','error');return;}this.callServer('doiMatKhau',[this.user.hoTen,this.passForm.old,this.passForm.new1]).then(function(r){if(r&&r.success){s.showToast(r.message);s.showDoiMk=false;s.passForm={old:'',new1:'',new2:''};}else s.showToast(r?r.message:'Lỗi','error');}).catch(function(){s.showToast('Lỗi server','error');});},
+                submitNapTien: function(){var s=this;if(this.napTienForm.soTien<10000){this.showToast('Tối thiểu 10.000đ','error');return;}this.callServer('napTien',[this.user.hoTen,this.napTienForm.soTien,this.napTienForm.noiDung]).then(function(r){if(r&&r.success){s.showToast(r.message);s.napTienForm.noiDung='';}}).catch(function(){s.showToast('Lỗi','error');});},
+                openCuocModal: function(t){this.cuocModal={show:true,isChange:false,tran:t,chon:''};},
+                openChangeModal: function(b){var t=this.matches.find(function(x){return x.maTran===b.maTran;});if(t)this.cuocModal={show:true,isChange:true,tran:t,chon:''};},
+                submitCuoc: function(){
+                    var s=this,c=this.cuocModal;if(!c.chon)return;
+                    var method=c.isChange?'doiKetQuaCuoc':'datCuoc';
+                    this.callServer(method,[this.user.hoTen,c.tran.maTran,c.chon]).then(function(r){
+                        if(r&&r.success){s.showToast(r.message);s.cuocModal.show=false;s.fetchVi();if(s.currentTab==='cuoc')s.fetchCuocCuaToi();else s.fetchLichThiDau();}
+                        else s.showToast(r?r.message:'Lỗi','error');
+                    }).catch(function(){s.showToast('Lỗi server','error');});
+                },
+                submitKetQua: function(){var s=this;if(!this.adminForm.maTran||!this.adminForm.ketQua){this.showToast('Nhập đầy đủ!','error');return;}this.callServer('capNhatKetQua',[this.adminForm.maTran,this.adminForm.ketQua]).then(function(r){s.showToast(r.message,r.success?'success':'error');if(r.success){s.adminForm.ketQua='';s.fetchLichThiDau();}}).catch(function(){s.showToast('Lỗi','error');});},
+                fetchAdminNapTien: function(){var s=this;this.callServer('layDanhSachNapTienChoDuyet').then(function(r){if(r)s.adminNapTienList=r;}).catch(function(){});},
+                duyetTien: function(dong,st){var s=this;if(!confirm('Xác nhận '+st+'?'))return;this.callServer('duyetNapTien',[dong,st]).then(function(r){s.showToast(r.message);s.fetchAdminNapTien();}).catch(function(){});}
+            },
+            watch: {
+                currentTab: function(v){
+                    if(v==='cuoc')this.fetchCuocCuaToi();
+                    if(v==='bxh')this.fetchBXH();
+                    if(v==='vi')this.fetchLichSu();
+                    if(v==='admin'&&this.user&&this.user.isAdmin)this.fetchAdminNapTien();
+                }
+            },
+            mounted: function(){
+                this.initLoad();
+                try{lucide.createIcons();}catch(e){}
+                // Countdown timer - cập nhật mỗi giây
+                var self=this;
+                setInterval(function(){self.nowTime=Date.now();},1000);
+            },
+            updated: function(){
+                try{lucide.createIcons();}catch(e){}
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

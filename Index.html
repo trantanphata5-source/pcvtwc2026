@@ -27,6 +27,12 @@
     <script>
     (function(){
         if (typeof google !== 'undefined' && google.script) return; // Apps Script environment - skip mock
+        
+        // Nếu chạy trên server web thực tế (Vercel) thì đánh dấu dùng Fetch API và bỏ qua Mock
+        if (window.location.protocol.startsWith('http')) {
+            window.__USE_FETCH = true;
+            return;
+        }
 
         // ===== MOCK DATA =====
         var MOCK_USERS = [
@@ -723,12 +729,17 @@
                             <div style="font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
                                 <i data-lucide="landmark" style="width:16px;height:16px;color:#facc15;"></i> Chuyển khoản nạp tiền
                             </div>
-                            <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Ngân hàng: <span style="color:white;font-weight:600;">{{ bank.nganHang }}</span></div>
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0;">
-                                <div style="font-size:22px;font-weight:900;color:#facc15;letter-spacing:2px;font-family:monospace;">{{ bank.soTaiKhoan }}</div>
-                                <button @click="copy(bank.soTaiKhoan)" class="btn-outline" style="padding:6px 14px;border-radius:8px;font-size:11px;font-weight:600;">📋 Copy</button>
+                            <div style="display:flex; gap: 16px; align-items:center;">
+                                <div style="background: white; padding: 4px; border-radius: 8px;">
+                                    <img :src="'https://img.vietqr.io/image/'+bank.nganHang+'-'+bank.soTaiKhoan+'-compact.png?addInfo=NAPTIEN%20'+removeAccents(user.hoTen)" style="width:100px; height: 100px; border-radius: 4px;">
+                                </div>
+                                <div style="flex:1;">
+                                    <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Ngân hàng: <span style="color:white;font-weight:600;">{{ bank.nganHang }}</span></div>
+                                    <div style="font-size:20px;font-weight:900;color:#facc15;font-family:monospace;letter-spacing:1px;margin:8px 0;">{{ bank.soTaiKhoan }}</div>
+                                    <button @click="copy(bank.soTaiKhoan)" class="btn-outline" style="padding:4px 10px;border-radius:6px;font-size:10px;">📋 Copy STK</button>
+                                </div>
                             </div>
-                            <div style="font-size:11px;color:#fb923c;border-left:3px solid #fb923c;padding:8px 12px;background:rgba(251,146,60,0.05);border-radius:0 8px 8px 0;">
+                            <div style="font-size:11px;color:#fb923c;border-left:3px solid #fb923c;padding:8px 12px;background:rgba(251,146,60,0.05);border-radius:0 8px 8px 0; margin-top:16px;">
                                 Nội dung CK: <strong style="color:white;text-transform:uppercase;">NAPTIEN {{ removeAccents(user.hoTen) }}</strong>
                             </div>
                         </div>
@@ -1147,8 +1158,11 @@
                     var saved=null;try{var s=sessionStorage.getItem('wc_user');if(s)saved=JSON.parse(s);}catch(e){}
                     if(saved){this.user=saved;this.loadDash();}
                     else{
-                        this.globalLoading=true;
-                        google.script.run.withSuccessHandler(function(r){self.globalLoading=false;self.userList=r||[];}).withFailureHandler(function(e){self.globalLoading=false;self.showToast('Lỗi: '+e.message,'error');}).layDSHoTen();
+                        this.callServer('layDSHoTen').then(function(r){
+                            self.userList=r||[];
+                        }).catch(function(e){
+                            self.showToast('Lỗi: '+e.message,'error');
+                        });
                     }
                 },
                 login: function(){

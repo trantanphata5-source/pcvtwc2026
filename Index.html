@@ -422,9 +422,9 @@
                 <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
                     <div style="width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(250,204,21,0.12) 0%,transparent 70%);animation:pulse-badge 3s infinite;"></div>
                 </div>
-                <div style="position:relative;display:inline-block;padding:20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:28px;backdrop-filter:blur(10px);">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/2026_FIFA_World_Cup_logo.svg/512px-2026_FIFA_World_Cup_logo.svg.png"
-                         alt="FIFA World Cup 2026" style="width:100px;height:auto;filter:drop-shadow(0 0 30px rgba(250,204,21,0.3)) saturate(1.2);">
+                <div style="position:relative;display:inline-block;padding:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:28px;backdrop-filter:blur(10px);">
+                    <img src="./logo.jpg"
+                         alt="Logo" style="width:120px;height:auto;border-radius:20px;filter:drop-shadow(0 0 20px rgba(250,204,21,0.2));">
                 </div>
             </div>
 
@@ -475,8 +475,8 @@
                 <!-- Top bar -->
                 <div style="height:56px;display:flex;align-items:center;justify-content:space-between;">
                     <div style="display:flex;align-items:center;gap:12px;">
-                        <div style="background:rgba(255,255,255,0.08);padding:6px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/2026_FIFA_World_Cup_logo.svg/512px-2026_FIFA_World_Cup_logo.svg.png" alt="WC" style="width:22px;height:auto;">
+                        <div style="background:rgba(255,255,255,0.08);padding:4px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);">
+                            <img src="./logo.jpg" alt="Logo" style="width:26px;height:auto;border-radius:6px;">
                         </div>
                         <div>
                             <div style="font-size:13px;font-weight:800;letter-spacing:-0.3px;text-transform:uppercase;line-height:1.2;">CHÁY HẾT MÌNH CÙNG WC 2026</div>
@@ -1143,12 +1143,12 @@
                             }
                         });
                     }
-                    // Nếu chạy trên Vercel → fetch API
+                    // Nếu chạy trên Vercel → fetch API (Dùng GET để tránh lỗi CORS khi redirect)
                     var API_URL='https://script.google.com/macros/s/AKfycbxeGk1hsXKuyBC_ypgfKnDHMU-hbTyEJMCQKYoRbzuPnW4gxz3mkndNO_WqRUrOYVb0/exec';
-                    return fetch(API_URL,{
-                        method:'POST',redirect:'follow',
-                        headers:{'Content-Type':'text/plain;charset=utf-8'},
-                        body:JSON.stringify({action:method,args:args})
+                    var query = '?action=' + encodeURIComponent(method) + '&args=' + encodeURIComponent(JSON.stringify(args));
+                    return fetch(API_URL + query, {
+                        method: 'GET',
+                        redirect: 'follow'
                     }).then(function(r){return r.json();})
                     .then(function(data){self.globalLoading=false;return data;})
                     .catch(function(err){self.globalLoading=false;throw err;});
@@ -1169,15 +1169,17 @@
                     var self=this;
                     if(!this.loginForm.hoTen){this.showToast('Chọn Họ và tên','error');return;}
                     if(!this.loginForm.matKhau){this.showToast('Nhập mật khẩu','error');return;}
-                    this.loading=true; this.globalLoading=true;
-                    google.script.run
-                        .withSuccessHandler(function(res){
-                            self.loading=false;self.globalLoading=false;
+                    this.loading=true;
+                    this.callServer('dangNhap',[this.loginForm.hoTen, this.loginForm.matKhau])
+                        .then(function(res){
+                            self.loading=false;
                             if(res&&res.success){try{sessionStorage.setItem('wc_user',JSON.stringify(res));}catch(e){}self.user=res;self.showToast('Chào mừng '+res.hoTen+'! ⚽');self.loadDash();}
                             else{self.showToast(res?res.message:'Đăng nhập thất bại!','error');}
                         })
-                        .withFailureHandler(function(e){self.loading=false;self.globalLoading=false;self.showToast('Lỗi server!','error');})
-                        .dangNhap(self.loginForm.hoTen,self.loginForm.matKhau);
+                        .catch(function(err){
+                            self.loading=false;
+                            self.showToast('Lỗi đăng nhập: ' + err.message,'error');
+                        });
                 },
                 logout: function(){try{sessionStorage.removeItem('wc_user');}catch(e){}this.user=null;this.showUserMenu=false;this.currentTab='lich';this.initLoad();},
                 loadDash: function(){this.fetchVi();this.fetchLichThiDau();this.fetchBank();},

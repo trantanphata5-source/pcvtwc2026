@@ -439,10 +439,10 @@
                 <form @submit.prevent="login">
                     <div style="margin-bottom:20px;text-align:left;">
                         <label style="display:block;font-size:11px;color:#94a3b8;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Họ và tên</label>
-                        <select v-model="loginForm.hoTen" class="form-input" style="font-size:15px;">
-                            <option value="" disabled>-- Chọn tên của bạn --</option>
-                            <option v-for="name in userList" :key="name" :value="name">{{ name }}</option>
-                        </select>
+                        <input type="text" v-model="loginForm.hoTen" list="user-names-list" class="form-input" style="font-size:15px;" placeholder="Nhập họ và tên" autocomplete="off" required>
+                        <datalist id="user-names-list">
+                            <option v-for="name in userList" :key="name" :value="name"></option>
+                        </datalist>
                         <p v-if="userList.length===0 && !globalLoading" style="font-size:11px;color:#f87171;margin-top:6px;">❗ Chưa tải được danh sách. Hãy thử tải lại trang.</p>
                     </div>
                     <div style="margin-bottom:28px;text-align:left;">
